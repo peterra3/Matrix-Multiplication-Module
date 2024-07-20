@@ -1,4 +1,4 @@
-Matrix Multiplication Module [Design, Simulation, and Synthesis]
+# Matrix Multiplication Module [Design, Simulation, and Synthesis]
 
 ## Getting started
 First, clone the git repository onto your home directory.
