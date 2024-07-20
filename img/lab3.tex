@@ -1,0 +1,231 @@
+%\documentclass{beamer}
+\documentclass[handout]{beamer}
+
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{circuitikz}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{ifthen}
+\usepackage[absolute,overlay]{textpos}
+\usepackage{todonotes}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{xcolor}
+\usepackage[export]{adjustbox}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{caption}
+\usepackage[noend]{algpseudocode}
+
+\usepackage{minted} % source-code highlighting
+
+\captionsetup{justification=centering}
+
+\usetikzlibrary{matrix,backgrounds,shapes,shapes.callouts,arrows,positioning,calc,snakes,fit}
+\usetikzlibrary{circuits.logic.US}
+\usepgflibrary{decorations.markings}
+
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+\newcommand*{\DOT}{.}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.png,.eps}
+
+\setbeamertemplate{sidebar right}{}
+\setbeamertemplate{footline}{%
+  \hfill\usebeamertemplate***{navigation symbols}
+\hspace{1cm}\insertframenumber{}/\inserttotalframenumber}
+
+\makeatletter
+\let\slideno\beamer@slideinframe
+\makeatother
+
+
+\begin{document}
+
+\pgfdeclarelayer{bg}    % declare background layer
+\pgfsetlayers{bg,main}  % set the order of the layers (main is the standard layer)
+
+\thispagestyle{empty}
+\begin{frame}
+  %\frametitle{Lab3 $\rightarrow$ Systolic Core}
+  \begin{center}
+  \scalebox{0.9}{
+  \begin{tikzpicture}
+    \pgfmathsetmacro{\Nx}{3}
+    \pgfmathsetmacro{\Ny}{3}
+    \foreach \x in {0,...,\Nx} {
+      \foreach \y in {0,...,\Ny} {
+    	\pgfmathtruncatemacro{\xx}{\Nx-\x}
+    	\pgfmathtruncatemacro{\yy}{\Ny-\y}
+        \node [draw,fill=blue!20,minimum height=0.75cm,minimum
+          width=0.75cm,align=center] (mac\x\y) at
+	  (1.2*\x,1.2*\y) {\tiny pe.v\\[-1ex]\tiny pe[\yy][\x]};
+      }
+    }
+    \pgfmathtruncatemacro{\Nym}{\Ny-1}
+    \foreach \x in {0,...,\Nx} {
+      \foreach \y in {0,...,\Nym} {
+        \pgfmathtruncatemacro{\yp}{\y+1}
+        \draw [<-] (mac\x\y.north) -- (mac\x\yp.south);
+      }
+    }
+    \pgfmathtruncatemacro{\Nxm}{\Nx-1}
+    \foreach \x in {0,...,\Nxm} {
+      \foreach \y in {0,...,\Ny} {
+	\pgfmathtruncatemacro{\xp}{\x+1}
+        \draw [->] (mac\x\y.east) -- (mac\xp\y.west);
+      }
+    }
+    \foreach \y in {0,...,\Ny} {
+      \pgfmathtruncatemacro{\yy}{\Ny-\y}
+      \node [fill=red!20,minimum height=0.5cm,minimum
+        width=0.5cm] (rama\y) at
+	(-1.2,1.2*\y) {\tiny A[\yy]};
+      %\draw [->] (mac\Nx\y.east) -- ++(1,0);
+      \draw [<-] (mac0\y.west) -- (rama\y.east);
+    }
+    \foreach \x in {0,...,\Nx} {
+      \node [fill=red!20,minimum height=0.5cm,minimum
+        width=0.5cm] (ramb\x) at
+	(1.2*\x,1.2*\Ny+1) {\tiny B[\x]};
+      \draw [<-] (mac\x\Ny.north) -- (ramb\x);
+    }
+    \node [draw,fill=blue!20,minimum height=0.25cm,minimum
+      width=0.5cm,align=center] (ctrlmm) at ($(mac00)!0.5!(mac10)+(0,-0.75)$) {\tiny
+      counter.v};
+    \begin{pgfonlayer}{bg}
+      \begin{scope}
+	\node (systolic) [draw=black,fill=blue!05,fit=(ctrlmm) (mac00)
+		(mac\Nx\Ny),rounded corners=0.25cm,inner
+		sep=5pt,label={[xshift=5ex,yshift=3ex]below:\tiny systolic.sv}] {};
+      \end{scope}
+    \end{pgfonlayer}
+  \end{tikzpicture}
+  }
+  \end{center}
+\end{frame}
+\end{document}
+
+\begin{frame}
+  \frametitle{Course Goal $\rightarrow$ Design+Implement systolic array on FPGA}
+  \begin{center}
+  \scalebox{0.9}{
+  \begin{tikzpicture}
+    \pgfmathsetmacro{\Nx}{3}
+    \pgfmathsetmacro{\Ny}{3}
+    \foreach \x in {0,...,\Nx} {
+      \foreach \y in {0,...,\Ny} {
+        \node [draw,fill=blue!20,minimum height=0.75cm,minimum
+          width=0.75cm] (mac\x\y) at
+	  (1.5*\x,1.5*\y) {\tiny MAC};
+      }
+    }
+    \pgfmathtruncatemacro{\Nym}{\Ny-1}
+    \foreach \x in {0,...,\Nx} {
+      \foreach \y in {0,...,\Nym} {
+        \pgfmathtruncatemacro{\yp}{\y+1}
+        \draw [<-] (mac\x\y.north) -- (mac\x\yp.south);
+      }
+    }
+    \pgfmathtruncatemacro{\Nxm}{\Nx-1}
+    \foreach \x in {0,...,\Nxm} {
+      \foreach \y in {0,...,\Ny} {
+	\pgfmathtruncatemacro{\xp}{\x+1}
+        \draw [->] (mac\x\y.east) -- (mac\xp\y.west);
+      }
+    }
+    \foreach \y in {0,...,\Ny} {
+      \node [draw,fill=red!20,minimum height=0.75cm,minimum
+        width=0.5cm] (ramd\y) at
+	(1.5*\Nx+1.5,1.5*\y) {\tiny RAM};
+      \node [draw,fill=red!20,minimum height=0.75cm,minimum
+        width=0.5cm] (rama\y) at
+	(-1.5,1.5*\y) {\tiny RAM};
+      \draw [->] (mac\Nx\y.east) -- (ramd\y);
+      \draw [<-] (mac0\y.west) -- (rama\y);
+    }
+    \foreach \x in {0,...,\Nx} {
+      \node [draw,fill=red!20,minimum height=0.75cm,minimum
+        width=0.5cm] (ramb\x) at
+	(1.5*\x,1.5*\Ny+1.5) {\tiny RAM};
+      \draw [<-] (mac\x\Ny.north) -- (ramb\x);
+    }
+    % FSMs
+    \node [draw,fill=yellow!20,minimum height=0.25cm,minimum
+      width=0.5cm] (ctrlab) at (-1.5,-1.0) {\tiny Ctrl};
+    \node [draw,fill=yellow!20,minimum height=0.25cm,minimum
+      width=0.5cm] (ctrld) at (1.5*\Nx+1.5,-1.0) {\tiny Ctrl};
+    \node [draw,fill=yellow!20,minimum height=0.25cm,minimum
+      width=0.5cm] (ctrlmm) at ($(mac00)!0.5!(mac\Nx0)+(0,-1.0)$) {\tiny Ctrl};
+
+
+    \begin{pgfonlayer}{bg}
+      \begin{scope}
+	\node (mm) [draw=black,fill=green!05,fit=(rama0) (ramb\Nx) (ramd0) (ctrlab) (ctrld),rounded corners=0.25cm,inner sep=15pt] {};
+	\node (ramb) [draw=black,fill=red!05,fit=(ramb0) (ramb\Nx),rounded corners=0.25cm,inner sep=5pt] {};
+	\node (rama) [draw=black,fill=red!05,fit=(ctrlab) (rama0) (rama\Ny),rounded corners=0.25cm,inner sep=5pt] {};
+	\node (ramd) [draw=black,fill=red!05,fit=(ctrld) (ramd0) (ramd\Ny),rounded corners=0.25cm,inner sep=5pt] {};
+	\node (systolic) [draw=black,fill=blue!05,fit=(ctrlmm) (mac00) (mac\Nx\Ny),rounded corners=0.25cm,inner sep=5pt] {};
+      \end{scope}
+    \end{pgfonlayer}
+
+    \draw [<-,ultra thick] (rama0) -- ++(-1.25,0);
+    \draw [->,ultra thick] (ramd0) -- ++(1.25,0);
+    \draw [->,rounded corners=0.25cm] (rama) |- (ramb);
+
+%    https://tex.stackexchange.com/questions/181098/semitransparent-outside-clipped-region
+    \only<2|handout:2>{
+      \fill[white,fill opacity=.75]
+	(current bounding box.south west) rectangle (current bounding box.north east)
+      (mac00) circle[radius=0.5cm+.5\pgflinewidth];
+      \node[draw,fill=white,ellipse callout,callout absolute
+	  pointer={(mac00.center)},align=center] at (2,2) {Lab1,\\ Lab Manual:
+	Simulation\\ Lecture: Simulation};
+    }
+    \only<3|handout:3>{
+      \fill[white,fill opacity=.75]
+	(current bounding box.south west) rectangle (current bounding box.north east)
+	(ctrlmm) circle[radius=0.5cm+.5\pgflinewidth];
+      \node[draw,fill=white,ellipse callout,callout absolute
+	  pointer={(ctrlmm.center)},align=center] at (2,2) {Lab2,\\ Lab Manual:
+	Implementation\\ Lecture: Simulation, \\ Synthesis};
+    }
+
+    \only<4|handout:4>{
+      \fill[white,fill opacity=.75]
+	(current bounding box.south west) rectangle (current bounding box.north east)
+	(systolic) circle[radius=3.5cm+.5\pgflinewidth];
+      \node[draw,fill=white,ellipse callout,callout absolute
+	  pointer={(systolic.center)},align=center] at (4,5) {Lab3,\\ Lecture:
+	Pipelining, \\ Scheduling\\ Top-Down Synthesis};
+    }
+
+    \only<5|handout:5>{
+%      \fill[white,fill opacity=.75]
+%	(current bounding box.south west) rectangle (current bounding box.north east)
+%	(mm) circle[radius=4.5cm+.5\pgflinewidth];
+      \node[draw,fill=white,ellipse callout,callout absolute
+	  pointer={(systolic.center)},align=center] at (3,5) {Lab4,\\ Lab
+	  Manual: Pynq FPGA, \\ Floorplanning\\ Lecture:
+	FPGA Arch., \\ Memories, Timing };
+    }
+
+
+  \end{tikzpicture}
+  }
+  \end{center}
+\end{frame}
+
+\end{document}

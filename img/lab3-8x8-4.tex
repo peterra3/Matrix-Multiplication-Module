@@ -1,0 +1,127 @@
+%\documentclass{beamer}
+\documentclass[handout]{beamer}
+
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{circuitikz}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{ifthen}
+\usepackage[absolute,overlay]{textpos}
+\usepackage{todonotes}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{xcolor}
+\usepackage[export]{adjustbox}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{caption}
+\usepackage[noend]{algpseudocode}
+
+\usepackage{minted} % source-code highlighting
+
+\captionsetup{justification=centering}
+
+\usetikzlibrary{matrix,backgrounds,shapes,shapes.callouts,arrows,positioning,calc,snakes,fit}
+\usetikzlibrary{circuits.logic.US}
+\usepgflibrary{decorations.markings}
+
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+\newcommand*{\DOT}{.}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.png,.eps}
+
+\setbeamertemplate{sidebar right}{}
+\setbeamertemplate{footline}{%
+  \hfill\usebeamertemplate***{navigation symbols}
+\hspace{1cm}\insertframenumber{}/\inserttotalframenumber}
+
+\makeatletter
+\let\slideno\beamer@slideinframe
+\makeatother
+
+
+\begin{document}
+
+\pgfdeclarelayer{bg}    % declare background layer
+\pgfsetlayers{bg,main}  % set the order of the layers (main is the standard layer)
+
+\thispagestyle{empty}
+\begin{frame}
+  %\frametitle{Lab3 $\rightarrow$ Systolic Core}
+  \begin{center}
+  \scalebox{0.4}{
+  \begin{tikzpicture}
+    \pgfmathsetmacro{\Nx}{3}
+    \pgfmathsetmacro{\Ny}{3}
+    \foreach \x in {0,...,\Nx} {
+      \foreach \y in {0,...,\Ny} {
+        \pgfmathtruncatemacro{\xx}{\Nx-\x}
+        \pgfmathtruncatemacro{\yy}{\Ny-\y}
+        \node [draw,fill=gray!20,minimum height=1cm,minimum
+          width=1cm,align=center] (mac\x\y) at
+          (1.2*\x,1.2*\y) {\tiny pe.v\\[-1ex]\tiny pe[\yy][\x]};
+      }
+    }
+    \pgfmathtruncatemacro{\Nym}{\Ny-1}
+    \foreach \x in {0,...,\Nx} {
+      \foreach \y in {0,...,\Nym} {
+        \pgfmathtruncatemacro{\yp}{\y+1}
+        \draw [<-] (mac\x\y.north) -- (mac\x\yp.south);
+      }
+    }
+    \pgfmathtruncatemacro{\Nxm}{\Nx-1}
+    \foreach \x in {0,...,\Nxm} {
+      \foreach \y in {0,...,\Ny} {
+        \pgfmathtruncatemacro{\xp}{\x+1}
+        \draw [->] (mac\x\y.east) -- (mac\xp\y.west);
+      }
+    }
+    \foreach \y in {0,...,\Ny} {
+      \pgfmathtruncatemacro{\yy}{1+\Ny+\Ny-\y}
+      \pgfmathtruncatemacro{\ilim}{2*(\Nx+1)-1}
+      \foreach \i in {0,...,\ilim} {
+        \node [draw,fill=blue!20,minimum height=1cm,minimum
+          width=1cm] (rama\y\i) at
+          (-2.2-1*\i-1*\Ny+1*\y,1.2*\y) {\tiny A[\yy][\i]};
+      }
+      %\draw [->] (mac\Nx\y.east) -- ++(1,0);
+      \draw [<-] (mac0\y.west) -- (rama\y0.east);
+    }
+    \foreach \x in {0,...,\Nx} {
+      \pgfmathtruncatemacro{\ilim}{2*(\Ny+1)-1}
+      \foreach \i in {0,...,\ilim} {
+        \pgfmathtruncatemacro{\xx}{\x+\Nx+1}
+        \node [draw,fill=red!20,minimum height=1cm,minimum
+          width=1cm] (ramb\x\i) at
+          (1.2*\x,1.2*\Ny+2+1*\i+1*\x) {\tiny B[\i][\xx]};
+      }
+      \draw [<-] (mac\x\Ny.north) -- (ramb\x0);
+    }
+    \node [draw,fill=gray!20,minimum height=0.25cm,minimum
+      width=0.5cm,align=center] (ctrlmm) at ($(mac00)!0.5!(mac10)+(0,-0.85)$) {\tiny
+      counter.v};
+    \begin{pgfonlayer}{bg}
+      \begin{scope}
+        \node (systolic) [draw=black,fill=gray!05,fit=(ctrlmm) (mac00)
+        (mac\Nx\Ny),rounded corners=0.25cm,inner
+        sep=5pt,label={[xshift=5ex,yshift=3ex]below:\tiny systolic.sv}] {};
+      \end{scope}
+    \end{pgfonlayer}
+  \end{tikzpicture}
+  }
+  \end{center}
+\end{frame}
+\end{document}
+
